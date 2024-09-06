@@ -4,7 +4,7 @@
 # aniMotum isn't necessary for prefiltering outliers (could use trip package instead or douglas argos filter)
 # Example can be found here: https://cran.r-project.org/web/packages/foieGras/vignettes/basics.html
 # animotum: https://github.com/ianjonsen/aniMotum
-# This uses the default SDA prefilter settings (though these should be tweaked to match patterns in data errors)
+# This uses a separate SDA prefilter for each data type (Argos only, GPS only, or Argos and GPS)
 
 
 # 0) SET WORKING DIRECTORY ###############################
@@ -84,26 +84,55 @@ dat_lst_am_sf_merc180 <- dat_lst_am_sf %>%
 
 
 # 5) PREFILTER DATA THROUGH ANIMOTUM ###################################
-## Use SDA on these data
-# Allows unrealistic flight speeds at shorter distances (2.5-5 km)
-# Points beyond 2.5km to 5km are removed if they form tight turning angles
-# This filters all data types (argos, gps, and argos GPS) the same way (default SDA settings)
-# This will filter out GPS detections that could remain...
-# An alternative to this is to relax the turning angle filter to farther distances (e.g., 5km and 10km)...
-# ... and tighter spike angle (e.g., 5) to retain more locations locally
-# ... note that a speed and angle filter does appear necessary for GPS data as large outliers do arise & cause spikes
-dat_prefilter_lst_sda <- dat_lst_am_sf_merc180 %>% 
-  purrr::map(~aniMotum::fit_ssm(.x, 
-                                vmax = 42, #m/s (speed from Gronroos radar study)
-                                ang = c(15,25),  #c(15,25) DEFAULT (applies SDA filter in argos package); NA runs speed filter only
-                                distlim = c(2500, 5000), #default is c(2500, 5000); NA shuts off SDA in favor of speed filter
+## 5a) GPS ONLY ####
+# Use SDA on these data (important because there can be errors in GPS data causing spikes)
+# Points beyond 50 - 60 km are removed if they form tight turning angles
+# Allows unrealistic flight speeds locally (within 60 km); fast speeds beyond are removed
+dat_prefilter_sda_gps <- aniMotum::fit_ssm(dat_lst_sensors_sf_merc180$GPS,  
+                                vmax = 42, # m/s (speed from Gronroos radar study)
+                                ang = c(15,25),  # c(15,25) DEFAULT (applies SDA filter in argos package); NA runs speed filter only
+                                distlim = c(50000, 60000), #default is c(2500, 5000); NA shuts off SDA in favor of speed filter
+                                # expands distance limits to remove spikes beyond 50-60km (spikes patterns were realistic in many cases up to 50km)
                                 spdf = TRUE, # FALSE shuts off speed filter
-                                min.dt = 0, #0 second minimum allowable time between locs (allows for same timestamp to run through)
-                                model = "rw", #random walk
-                                pf = TRUE, # don't just prefilter, actually run SSMs
-                                time.step = NA, #locations estimated at observation times
-                                fit.to.subset =  FALSE, # TRUE runs aniMotum right away after prefiltering 
-                                control = ssm_control(verbose = 0)))
+                                min.dt = 0, # 0 second minimum allowable time between locs (allows for same timestamp to run through)
+                                model = "rw", # random walk
+                                pf = TRUE, # prefilter data
+                                time.step = NA, # locations estimated at observation times
+                                fit.to.subset =  FALSE, # Run prefilter only; TRUE runs aniMotum right away after prefiltering 
+                                control = ssm_control(verbose = 0))
+
+## 5b) ARGOS/GPS COMBO ####
+# Use SDA on these data
+# Allows unrealistic flight speeds at shorter distances (up to 10 km)
+# Points beyond 5 km to 10 km are removed if they form an angle of < 5 and < 45 respectively
+# Broadening the outer angle removes patterns of broader spikes beyond 10 km
+# Unrealistic speeds removed beyond 10 km
+dat_prefilter_sda_argosgps <-  aniMotum::fit_ssm(dat_lst_sensors_sf_merc180$`GPS,Argos Doppler Shift`, 
+                                           vmax = 42, # m/s (speed from Gronroos radar study)
+                                           ang = c(5, 45),  # broadened outer angle to account for key problems identified by visual inspection 
+                                           distlim = c(5000, 10000), # default is c(2500, 5000); broadened outer filter for spikes beyond 10 km
+                                           spdf = TRUE, # FALSE shuts off speed filter
+                                           min.dt = 0, # 0 second minimum allowable time between locs (allows for same timestamp to run through)
+                                           model = "rw", # random walk
+                                           pf = TRUE, # prefilter
+                                           time.step = NA, # locations estimated at observation times
+                                           fit.to.subset =  FALSE,  # Run prefilter only; TRUE runs aniMotum right away after prefiltering 
+                                           control = ssm_control(verbose = 0))
+
+## 5c) ARGOS ONLY ####
+# This uses the default DSA Argos filter settings for the first angles but is stricter beyond 10 km 
+# Visual inspection showed patterns up to 45 degrees causing problems beyond 5 km
+dat_prefilter_sda_argos <-  aniMotum::fit_ssm(dat_lst_sensors_sf_merc180$`Argos Doppler Shift`, 
+                                                 vmax = 42, #m/s prefiltered based on speed specified above
+                                                 ang = c(15,45),  # broadened outer angle further to account for key problems identified by visual inspection 
+                                                 distlim = c(2500, 10000), #default is c(2500, 5000); broadened outer filter for spikes beyond 10 km
+                                                 spdf = TRUE, # FALSE shuts off speed filter
+                                                 min.dt = 0, # 0 second minimum allowable time between locs (allows for same timestamp to run through)
+                                                 model = "rw", # random walk 
+                                                 pf = TRUE, # run prefilter
+                                                 time.step = NA, # locations estimated at observation times
+                                                 fit.to.subset =  FALSE,  # Run prefilter only; TRUE runs aniMotum right away after prefiltering 
+                                                 control = ssm_control(verbose = 0))
 
 
 # 6) CONVERT BACK TO LAT AND LONG ########################################
