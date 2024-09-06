@@ -4,4 +4,4 @@ The code was built using R Version 4.4.0 and following the Movebank Attribute Di
 
 Sensitive information and study-specific filtering steps are not included in this example for privacy reasons. Some examples include single tags deployed on multiple birds but not separated in Movebank, tags tested prior or after deployment on a bird, data stored in the same Movebank study with different ownership and terms of use, etc. 
 
-Please cite our paper and this Github Repository if you use this code for your work.
+Code sharing remains relatively uncommon in Ecology (Maitner et al. 2024, DOI: 10.1002/ece3.70030). Please cite our paper and this Github Repository to credit our work if you use this code.
