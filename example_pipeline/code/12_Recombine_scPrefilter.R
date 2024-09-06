@@ -153,11 +153,6 @@ dat_scpf_keeps_lst <- event_full_lst %>%
   purrr::map(~.x %>% 
     filter(any.failed.sc.filters != "TRUE"))
 
-## 6b) GRAB DROPS: (EVENTS THAT FAILED AT LEAST ONE PREFILTER) ####
-dat_scpf_drops_lst <- event_full_lst %>% 
-  purrr::map(~.x %>% 
-        filter(any.failed.sc.filters == "TRUE"))
-
 
 # 7) ADD SPEED, DISTANCE, ANGLE, MEASUREMENTS TO DATA THAT PASSED SC FREFILTER #####################
 # For reference if cross-checking different prefilter options
@@ -185,16 +180,12 @@ dat_scpf_keeps_lst <- dat_scpf_keeps_lst %>%
                       location.lat = y))
 
 
-# 8) SAVE KEEPS AND DROPS ###################################################
-## 8a) KEEPS ####
+# 8) SAVE KEEPS ###################################################
+## 8a) RDS ####
 saveRDS(dat_scpf_keeps_lst, "./Data/Cleaned/12_event_dat_SCPREFILTER_KEEPS.rds")
 
-## 8b) DROPS ####
-saveRDS(dat_scpf_drops_lst, "./Data/Cleaned/12_event_dat_SCPREFILTER_DROPS.rds")
-
-
-# 9) EXPORT "KEEPS" AS GEOPACKAGE #############################################
-## 9a) CONVERT TO CAMELCASE AND BASIC INFO AND DIST/TURN ANGLE INFO ####
+## 8b) AS GEOPACKAGE ####
+### CONVERT TO CAMELCASE AND BASIC INFO AND DIST/TURN ANGLE INFO ####
 keeps_sf <- dat_scpf_keeps_lst %>%
   map_df(~.x %>% as.data.frame() %>%
   st_as_sf(coords = c("location.long", "location.lat"),
