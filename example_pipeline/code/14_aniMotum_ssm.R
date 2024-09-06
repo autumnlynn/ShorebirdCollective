@@ -50,14 +50,11 @@ rm(am_lst, am_lst_sf_ll)
 ## 3a) FIT CONTINUOUS SSM ####
 dat_ssm <- am_lst_sf_merc180 %>% 
   purrr::map(~aniMotum::fit_ssm(.x, 
-                                vmax= 42, #m/s prefiltered based on speed specified above
-                                ang = c(15,25),  #c(15,25) DEFAULT (applies SDA filter in argos package); NA runs speed filter only
-                                distlim = c(2500, 5000), #default is c(2500, 5000); NA shuts off SDA in favor of speed filter
-                                spdf = TRUE, #FALSE shuts off speed filter
+                                spdf = FALSE, #FALSE shuts off speed filter
                                 min.dt = 0, #0 second minimum allowable time between locs (allows for same timestamp to run through)
                                 model = "rw", #crw is a random walk on velocity
                                 pf = FALSE, # DONT PREFILTER (WE HAVE DONE THIS ALREADY) just run SSMs
-                                time.step = NA, #locations estimated at observation times; can adjust to estimate and different intervals (in hours)
+                                time.step = NA, # locations estimated at observation times; can adjust to estimate and different intervals (in hours)
                                 fit.to.subset =  FALSE, # DONT fit to prefiltered data (because already prefiltered)
                                 control = ssm_control(verbose = 0)))
 
