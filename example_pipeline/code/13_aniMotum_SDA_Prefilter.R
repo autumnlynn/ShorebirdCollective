@@ -134,6 +134,9 @@ dat_prefilter_sda_argos <-  aniMotum::fit_ssm(dat_lst_sensors_sf_merc180$`Argos 
                                                  fit.to.subset =  FALSE,  # Run prefilter only; TRUE runs aniMotum right away after prefiltering 
                                                  control = ssm_control(verbose = 0))
 
+## 5d) RE-LIST DATA ####
+dat_prefilter_lst_sda <- lst(dat_prefilter_sda_gps, dat_prefilter_sda_argosgps, dat_prefilter_sda_argos)
+
 
 # 6) CONVERT BACK TO LAT AND LONG ########################################
 dat_prefilter_lst_sda_ll <- dat_prefilter_lst_sda %>%
@@ -146,10 +149,6 @@ dat_prefilter_lst_sda_ll <- dat_prefilter_lst_sda %>%
 ### KEEPS ####
 dat_keeps_sda_lst <- dat_prefilter_lst_sda_ll %>% 
   purrr::map(~.x %>% filter(keep == "TRUE") %>% st_drop_geometry())
-
-### DROPS ####
-dat_drops_sda_lst <- dat_prefilter_lst_sda_ll %>% 
-  purrr::map(~.x %>% filter(keep == "FALSE") %>% st_drop_geometry())
 
 
 # 8) FLAG SHORT DURATION TRACKS (AGAIN) ####################################
@@ -220,64 +219,15 @@ dat_keeps_sda_lst <- purrr::map2(dat_keeps_sda_lst, dep_visible_counts_lst,
                                  ~left_join(.x, .y)) #Joining with `by = join_by(id)`
 
 
-# 10) CLEAN AND ORGANIZE DROPS ###############################
-## 10a) GET EXTRA DROPS POST PREFILTER (SHORT TRACKS/FEW OBS) ####
-add_drops_lst <- dat_keeps_sda_lst %>%
-  purrr::map(~.x %>% filter(any.failed.sc.filters == "TRUE") %>%
-               select(-n.visible.detections) %>%
-               mutate(filter.sda.am = 1)) # didn't fail sda but failed others
-
-## 10b) FORMAT AM DROPS (FROM FILTERS) ####
-dat_drops_sda_lst <- dat_drops_sda_lst %>% purrr::map(~.x %>% 
-                                               mutate(filter.track.duration.less8days = NA,
-                                                      filter.visible.obs.less4 = NA,
-                                                      any.failed.sc.filters = NA, 
-                                                      filter.sda.am = 0))
-
-## 10c) ADD AM DROPS IN WITH EXTRA SC POST DROPS ####
-dat_drops_sda_lst <- purrr::map2(dat_drops_sda_lst, add_drops_lst, ~bind_rows(.x, .y))
-
-## 10d) SAVE DROPS ####
-saveRDS(dat_drops_sda_lst, "./Data/Cleaned/13_event_dat_SDAFILTER_DROPS.rds")
-
-## 10e) CONVERT TO SF AND SAVE AS GEOPACKAGE LAYER ####
-dat_drops_sda_sf <- dat_drops_sda_lst %>%
-  map_df(~.x %>% as.data.frame(), .id = "sc.dataset.id") %>%
-  rename(sc.deployment.id = id,
-         timestamp = date, 
-         argos.lc = lc, 
-         location.long = lon , 
-         location.lat = lat, 
-         argos.semi.major = smaj, 
-         argos.semi.minor = smin, 
-         argos.orientation = eor) %>%
-  st_as_sf(coords = c("location.long", "location.lat"),
-           crs = "+proj=longlat +datum=WGS84") %>% #convert to sf
-  dplyr::mutate(location.long = sf::st_coordinates(.)[,1],
-                location.lat = sf::st_coordinates(.)[,2]) # Convert to sf and add coordinates back as columns on here
-
-### MERGE SENSOR TYPES DETECTED ####
-# For easier filtering
-dat_drops_sda_sf <- left_join(dat_drops_sda_sf, meta_df) #Joining with `by = join_by(sc.deployment.id)`
-
-### CONVERT TO CAMELCASE ####
-dat_drops_sda_sf_sn <- dat_drops_sda_sf %>%
-  rename_with(., .fn = ~ snakecase::to_lower_camel_case(.)) 
-
-### EXPORT AS GEOPACKAGE LAYER ####
-# Allows overlaying with original, scprefiltered points, and these to explore outcomes
-st_write(dat_drops_sda_sf_sn, "./Data/Geopackage/POINTS_latlon.gpkg", "sdafiltered_dropped_points", append = FALSE)
-
-
-# 11) SAVE KEEPS ########################################################
-## 11a) FILTER OUT SC POST AM REMOVALS ####
+# 10) SAVE KEEPS ########################################################
+## 10a) FILTER OUT SC POST AM REMOVALS ####
 dat_keeps_sda_lst_updated <- dat_keeps_sda_lst %>%
   purrr::map(~.x %>% filter(any.failed.sc.filters == "FALSE"))
 
-## 11b) SAVE DATA ####
+## 10b) SAVE DATA ####
 saveRDS(dat_keeps_sda_lst_updated, "./Data/Cleaned/13_event_dat_SDAFILTER_KEEPS.rds")
 
-## 11c) CONVERT TO SF AND SAVE AS GEOPACKAGE LAYER ####
+## 10c) CONVERT TO SF AND SAVE AS GEOPACKAGE LAYER ####
 dat_keeps_sda_sf_updated <- dat_keeps_sda_lst_updated %>%
   map_df(~.x %>% as.data.frame(), .id = "sc.dataset.id") %>%
   rename(sc.deployment.id = id,
