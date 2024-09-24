@@ -2,6 +2,7 @@
 # CODE PURPOSE: DOWNLOAD ARGOS, GPS, & ARGOS/GPS DATA (EVENTS & REFERENCE DAT) ####
 # And do some formatting for consistent output across datasets
 # Movebank data library for more info: http://vocab.nerc.ac.uk/collection/MVB/current/
+# Note that taxonomy is not up-to-date with Clements/eBird 2023 taxonomy
 
 
 # THIS CODE DOES THE FOLLOWING: 
