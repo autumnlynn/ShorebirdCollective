@@ -131,27 +131,12 @@ saveRDS(ref_dat_reassigned, "./Data/Cleaned/02_movebank_ref_dat_reassigned.rds")
 # 5) ADD SENSOR.TYPES.DETECTED COLUMN INTO EVENT DATA #########################
 # Could use case_when statements to make 5a-e a single step below
 
-## 5a) GRAB & ASSIGN ARGOS & GPS TAG DATA: ####
-# Subset to individuals with both argos and gps detections and add identifier:
-argosgps_events <- movebank_event_dat_df %>% 
-  filter(deployment.id %in% argosgps_depIDs) %>% 
-  mutate(sensor.types.detected = "GPS,Argos Doppler Shift") #Create new label of sensor.type.detected (use the format to match old format and those of direct send)
+## 5a) GRAB & ASSIGN DATA: ####
+event_dat_reassigned <- movebank_event_dat_df %>% 
+  mutate(sensor.types.detected = case_when(deployment.id %in% argosgps_depIDs ~ "GPS,Argos Doppler Shift",
+                                           deployment.id %in% argosOnly_depIDs ~ "Argos Doppler Shift",
+                                           deployment.id %in% gpsOnly_depIDs ~ "GPS", .default = NA))
 
-## 5b) ARGOS ONLY TAG DATA: ####
-# Subset to individuals with only argos detections and add identifier:
-argosOnly_events <- movebank_event_dat_df %>% 
-  filter(deployment.id %in% argosOnly_depIDs) %>%
-  mutate(sensor.types.detected = "Argos Doppler Shift") #Create new label of sensor.type.detected
-
-## 5c) GPS ONLY TAG DATA: ####
-# Subset to individuals with only gps detections and add identifier:
-gpsOnly_events <- movebank_event_dat_df %>% 
-  filter(deployment.id %in% gpsOnly_depIDs) %>% 
-  mutate(sensor.types.detected = "GPS") #Create new label of sensor.type.detected
-
-## 5d) COMBINE ASSIGNED EVENT DATA BACK INTO ONE DF ####
-event_dat_reassigned <- rbind(argosgps_events, argosOnly_events, gpsOnly_events)
-
-## 5e) SAVE AS "REASSIGNED" EVENT DATA ####
+## 5b) SAVE AS "REASSIGNED" EVENT DATA ####
 saveRDS(event_dat_reassigned, "./Data/Cleaned/02_movebank_event_dat_reassigned.rds")
 
