@@ -2,6 +2,7 @@
 # CODE PURPOSE: RUN SC PRE-FILTERED TRACKING DATA THROUGH aniMotum FOR ADDITIONAL FILTERING
 # Before running state-space model, outliers need to be removed; hence this prefilter step
 # aniMotum isn't necessary for prefiltering outliers (could use trip package instead or douglas argos filter)
+# Note that GPS data is more messy than many think and really should be run through a speed or sda filter (as done here)
 # Example can be found here: https://cran.r-project.org/web/packages/foieGras/vignettes/basics.html
 # animotum: https://github.com/ianjonsen/aniMotum
 # This uses a separate SDA prefilter for each data type (Argos only, GPS only, or Argos and GPS)
