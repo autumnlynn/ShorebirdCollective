@@ -145,7 +145,7 @@ dat_prefilter_lst_sda_ll <- dat_prefilter_lst_sda %>%
                              lat = unlist(purrr::map(.x$geometry,2))))
 
 
-# 7) GRAB FILTERED AND UNFILTERED LOCATIONS ###################################
+# 7) GRAB FILTERED LOCATIONS ###################################
 ### KEEPS ####
 dat_keeps_sda_lst <- dat_prefilter_lst_sda_ll %>% 
   purrr::map(~.x %>% filter(keep == "TRUE") %>% st_drop_geometry())
