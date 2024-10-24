@@ -253,7 +253,7 @@ dat_keeps_sda_sf_updated_sn <- dat_keeps_sda_sf_updated %>%
  rename_with(., .fn = ~ snakecase::to_lower_camel_case(.)) 
   
 ### EXPORT AS GEOPACKAGE LAYER ####
-st_write(dat_keeps_sda_sf_updated_sn, "./Data/Geopackage/POINTS_latlon.gpkg", "sdafiltered_passed_points", append = FALSE)
+st_write(dat_keeps_sda_sf_updated_sn, "./Data/Geopackage/POINTS_latlon.gpkg", "sdaprefiltered_points", append = FALSE)
 
 ### CREATE TRACKLINES AND EXPORT FOR ARCPRO ####
 tracks_keeps_sda_sf_ea <- dat_keeps_sda_sf_updated %>%
