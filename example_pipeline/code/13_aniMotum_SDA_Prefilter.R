@@ -141,7 +141,7 @@ dat_prefilter_lst_sda <- lst(dat_prefilter_sda_gps, dat_prefilter_sda_argosgps, 
 
 # 6) CONVERT BACK TO LAT AND LONG ########################################
 dat_prefilter_lst_sda_ll <- dat_prefilter_lst_sda %>%
-  purrr::map(~ .x %>% st_transform("+proj=longlat +datum=WGS84")) %>% # to match input ll
+  purrr::map(~ .x %>% st_transform("EPSG:4326")) %>% # to match input ll
   purrr::map( ~.x %>% mutate(lon = unlist(purrr::map(.x$geometry,1)), #Add lat/lon as columns
                              lat = unlist(purrr::map(.x$geometry,2))))
 
@@ -240,7 +240,7 @@ dat_keeps_sda_sf_updated <- dat_keeps_sda_lst_updated %>%
          argos.semi.minor = smin, 
          argos.orientation = eor) %>%
   st_as_sf(coords = c("location.long", "location.lat"),
-           crs = "+proj=longlat +datum=WGS84") %>% #convert to sf
+           crs = "EPSG:4326") %>% #convert to sf
   dplyr::mutate(location.long = sf::st_coordinates(.)[,1],
                 location.lat = sf::st_coordinates(.)[,2]) # Convert to sf and add coordinates back as columns on here
 
