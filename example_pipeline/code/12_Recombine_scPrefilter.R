@@ -64,15 +64,7 @@ event_full_sf <- event_full_df %>%
            crs = "+proj=longlat +datum=WGS84") %>% #convert to sf 
   dplyr::mutate(location.long = sf::st_coordinates(.)[,1],
                 location.lat = sf::st_coordinates(.)[,2]) %>% # Convert to sf and add coordinates back as columns on here
-  select(species.scDatasetID, event.id, visible,
-         timestamp, 
-         location.long, location.lat, individual.id, deployment.id,
-         tag.id, study.id, sensor.type.id, individual.local.identifier,
-         tag.local.identifier, individual.taxon.canonical.name,
-         argos.lc, sensor.types.detected, 
-         species.code, sc.dataset.id, sc.individual.id, sc.deployment.id, 
-         data.receipt.type, sc.individual.notes, 
-         estimated.duty.cycle.description, contains("filter")) %>%
+  select(-dep.lat.digits, -dep.long.digits, -gap.marker, -twoweek.trunc.gaps) %>% # keep most original columns because sometimes groups want to see full raw data
   rename_with(., .fn = ~ snakecase::to_lower_camel_case(.)) %>%
   mutate(movebankDeploymentId = as.character(deploymentId), #more informative names
          movebankIndId = as.character(individualId),
