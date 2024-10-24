@@ -6,6 +6,8 @@
 # Example can be found here: https://cran.r-project.org/web/packages/foieGras/vignettes/basics.html
 # animotum: https://github.com/ianjonsen/aniMotum
 # This uses a separate SDA prefilter for each data type (Argos only, GPS only, or Argos and GPS)
+# Note, this prefilter step should be run directly when running the SSM; here we simply output the results of the
+# prefilter so we can view them and explore the points that pass the prefilter easily in comparison to SSM output
 
 
 # 0) SET WORKING DIRECTORY ###############################
