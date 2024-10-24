@@ -181,7 +181,7 @@ saveRDS(dat_scpf_keeps_lst, "./Data/Cleaned/12_event_dat_SCPREFILTER_KEEPS.rds")
 keeps_sf <- dat_scpf_keeps_lst %>%
   map_df(~.x %>% as.data.frame() %>%
   st_as_sf(coords = c("location.long", "location.lat"),
-           crs = "+proj=longlat +datum=WGS84") %>% #convert to sf
+           crs = "EPSG:4326") %>% #convert to sf
   dplyr::mutate(location.long = sf::st_coordinates(.)[,1],
                 location.lat = sf::st_coordinates(.)[,2]) %>%# Convert to sf and add coordinates back as columns on here
   select(species.scDatasetID, event.id, visible,
