@@ -61,7 +61,7 @@ event_full_sf <- event_full_df %>%
              filter.bad.lat == 0 | 
              filter.bad.lon == 0)) %>%
   st_as_sf(coords = c("location.long", "location.lat"),
-           crs = "+proj=longlat +datum=WGS84") %>% #convert to sf 
+           crs = "EPSG:4326") %>% #convert to sf 
   dplyr::mutate(location.long = sf::st_coordinates(.)[,1],
                 location.lat = sf::st_coordinates(.)[,2]) %>% # Convert to sf and add coordinates back as columns on here
   select(-dep.lat.digits, -dep.long.digits, -gap.marker, -twoweek.trunc.gaps) %>% # keep most original columns because sometimes groups want to see full raw data
