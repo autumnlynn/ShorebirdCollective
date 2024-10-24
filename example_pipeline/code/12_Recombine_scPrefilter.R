@@ -81,7 +81,7 @@ event_full_sf <- event_full_df %>%
 ### EXPORT AS GEOPACKAGE ####
 # Necessary for loading into arcpro when exceeding the 2GB file size limit of .shp
 # Will need to set projection in arc to laea with revised meridian and lat coords
-st_write(event_full_sf, "./Data/Geopackage/POINTS_latlon.gpkg", "originalpoints", append = FALSE)
+st_write(event_full_sf, "./Data/Geopackage/POINTS_latlon.gpkg", "original_points", append = FALSE)
 
 ### CREATE TRACKLINES AND EXPORT FOR ARCPRO ####
 # If in lat/long in geopackage will be wonky around the international date line
@@ -212,7 +212,7 @@ keeps_sf <- dat_scpf_keeps_lst %>%
 
 ### EXPORT AS GEOPACKAGE LAYER ####
 # Allows us to overlay original points, with points passing the SC prefilter
-st_write(keeps_sf, "./Data/Geopackage/POINTS_latlon.gpkg", "scprefilt_passed_points", append = FALSE)
+st_write(keeps_sf, "./Data/Geopackage/POINTS_latlon.gpkg", "scprefiltered_points", append = FALSE)
 
 ### CREATE TRACKLINES AND EXPORT FOR ARCPRO ####
 keeps_tracks_sf_ea <- keeps_sf %>%
@@ -240,4 +240,4 @@ metadata <- keeps_sf %>%
 keeps_tracks_sf_ea <- left_join(keeps_tracks_sf_ea, metadata)
 
 ### SAVE TRACKS AS SHAPEFILE ####
-st_write(keeps_tracks_sf_ea, "./Data/Cleaned/shp/12_TRACKS_scprefilt_passed.shp", append = FALSE)
+st_write(keeps_tracks_sf_ea, "./Data/Cleaned/shp/12_TRACKS_scprefiltered.shp", append = FALSE)
