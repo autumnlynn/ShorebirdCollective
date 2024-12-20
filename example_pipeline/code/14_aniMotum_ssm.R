@@ -27,6 +27,13 @@ source("./Code/Functions/named_group_split.r")
 dat_scpf_keeps_lst_updated <- readRDS("./Data/Cleaned/13_event_dat_SDAFILTER_INDS.rds")
 # In previous step, might be possible to export as sf, so wouldn't need to reformat below
 
+### EXTRACT METADATA FOR MERGING WITH SSM OUTPUT ####
+meta_df <- dat_scpf_keeps_lst_updated %>%
+  map_df(~.x %>% as.data.frame()) %>%
+  filter(sc.location.origin == "tag") %>%
+  select(sc.deployment.id, sensor.types.detected, species.code, common.name) %>%
+  distinct()
+
 ## 2b) FORMAT FOR ANIMOTUM ####
 dat_lst_am <- dat_scpf_keeps_lst_updated %>% 
   purrr::map(~.x %>%
@@ -81,40 +88,31 @@ dat_ssm <- aniMotum::fit_ssm(dat_lst_sensors_sf_merc180$GPS,
                                     fit.to.subset =  TRUE, # TRUE runs aniMotum SSM right away after prefiltering 
                                     control = ssm_control(verbose = 0))
 
+## 3c) SAVE SSM RESULTS ####
+saveRDS(dat_ssm_gps, paste0("./Data/Modeled/SSM_gps_.rds"))
 
-# 4) EXPLORE SSM RESULTS ##########################################################
-purrr::map(dat_ssm, ~glimpse(.x) %>% print(n = Inf)) # look at all results
-purrr::map(dat_ssm, ~glimpse(.x) %>% filter(converged == "FALSE")) # check if any failed to converge: NO ISSUES
-purrr::map(dat_ssm, ~glimpse(.x) %>% filter(pdHess == "FALSE")) # check if TMB solved the Hessian Matrix & Obtained SEs: NO ISSUES
-# All converged and all have pdHESS = true
-# Some warnings that SE's could not be calculated (from gap-y data)
-# Could try changing interpolation interval (see example here: https://cran.r-project.org/web/packages/foieGras/vignettes/basics.html)
+## 3d) EXTRACT SSM FITTED VALUES ####
+# GRAB MODELED DATA AS SPATIAL DATA FRAME:
+flocs_sf_gps <- grab(dat_ssm_gps, what = "fitted", as_sf = TRUE)
 
-# 5) SAVE SSM RESULTS ####
-saveRDS(dat_ssm, "./Data/Modeled/14_SSM.rds")
+## 3e) CREATE SF DATAFRAME OF AM ESTIMATED LOCS ####
+flocs_sf_gps_format <- flocs_sf_gps %>%
+  rename(sc.deployment.id = id,
+         timestamp = date,
+         longitude.se.km = x.se,
+         latitude.se.km = y.se) %>%
+  arrange(sc.deployment.id, timestamp) %>%
+  group_by(sc.deployment.id) %>%
+  mutate(fg.modeled.seq.id = row_number()) %>%
+  ungroup()
+
+## 3f) JOIN WITH METDATA ####
+flocs_sf_gps_format <- left_join(flocs_sf_gps_format, meta_df) #Joining with `by = join_by(sc.deployment.id)`
+
+## 3g) SAVE MODELED DATA ####
+saveRDS(flocs_sf_gps_format, paste0("./Data/Modeled/14_FITTED_SF_gps.rds"))
 
 
-# 6) EXTRACT SSM FITTED VALUES ##################################
-## GRAB MODELED DAT AS SPATIAL DATA FRAME:
-fit.sf_list <- purrr::map(dat_ssm, ~ grab(.x, what = "fitted", as_sf = TRUE))
 
 
-# 7) CREATE SF OF AM LOCS ############################
-## 7a) ADD SC DATASET ID BACK AS COLUMN ####
-fit.sf_list <-  purrr::map2(fit.sf_list, names(fit.sf_list), 
-                       ~ .x %>% mutate(sc.dataset.id = .y)) 
-
-## 7b) CHANGE A FEW COLUMN NAMES ####
-fit.sf_list <- fit.sf_list %>% 
-  purrr::map(~.x %>%
-        rename(sc.deployment.id = id,
-               timestamp = date) %>%
-        mutate(sc.deployment.id = as.character(sc.deployment.id)) %>% #was as.numeric for movebank data
-        arrange(sc.deployment.id, timestamp) %>%
-        group_by(sc.deployment.id) %>%
-        mutate(fg.modeled.seq.id = row_number()) %>%
-        ungroup())
-
-# 8) SAVE MODELED DATA ##################################################
-saveRDS(fit.sf_list, "./Data/Modeled/14_MODELED_SF.rds")
 
