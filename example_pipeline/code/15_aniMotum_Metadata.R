@@ -17,15 +17,19 @@ sc_crs <- "+proj=laea +lon_0=-101.6 +lat_0=19.22 +datum=WGS84 +units=m +no_defs"
 
 
 # 2) LOAD MODELED DATA #####################################################
-mod_dat_sf_lst <- readRDS("./Data/Modeled/14_MODELED_SF.rds")
+flocs_sf_gps <- readRDS("./Data/Modeled/14_FITTED_SF_gps.rds")
+flocs_sf_argosgps <- readRDS("./Data/Modeled/14_FITTED_SF_argosgps.rds")
+flocs_sf_argos <- readRDS("./Data/Modeled/14_FITTED_SF_argos.rds")
 
 
 # 3) FORMAT MODELED DATA ##################################################
 ## 3a) UNLIST INTO ONE SF ####
-mod_single_sf <- dplyr::bind_rows(mod_dat_sf_lst) # Note, only works if data are the same projection (all are bc consistent foieGras world mercator output) 
+# 2a) UNLIST INTO ONE SF DATAFRAME ####
+flocs_single_sf <- dplyr::bind_rows(flocs_sf_gps, flocs_sf_argosgps,flocs_sf_argos) 
+# Note, above only works if data are the same projection (all are bc consistent animotum world mercator output) 
 
 ## 3b) RE-ADD MONTH AND YEAR IDENTIFIERS ####
-mod_single_sf <- mod_single_sf %>%
+flocs_single_sf <- flocs_single_sf %>%
   mutate(detection.date = as.Date(lubridate::date(timestamp)),
          detection.year = lubridate::year(timestamp),
          detection.week = lubridate::week(timestamp),
@@ -44,7 +48,7 @@ mod_single_sf <- mod_single_sf %>%
          ungroup() %>%
          mutate(days.since.first.detection = round(as.numeric(difftime(timestamp, first.timestamp, units = "days")), 0)) %>%
          select(-first.timestamp) 
-rm(mod_dat_sf_lst)
+rm(flocs_sf_gps, flocs_sf_argosgps, flocs_sf_argos)
 
 
 # 4) ADD TAG METADATA #########################################################
@@ -95,13 +99,13 @@ refdat_df <- refdat_lst %>%
                distinct())
 
 ## 4c) MERGE META WITH MODELED ####
-mod_single_sf_meta <- left_join(mod_single_sf, refdat_df) #Joining with `by = join_by(sc.deployment.id, sc.dataset.id)`
-rm(mod_single_sf, refdat_df)
+flocs_single_sf_meta <- left_join(flocs_single_sf, refdat_df) #Joining with `by = join_by(sc.deployment.id, sc.dataset.id)`
+rm(flocs_single_sf, refdat_df)
 
 
 # 5) ADD ADDITIONAL HELPFUL COLUMNS ##############################################
 ## 5a) FIRST AND LAST DETECTION IDENTIFIER, PLUS MORE ####
-mod_single_sf_meta <- mod_single_sf_meta %>% 
+flocs_single_sf_meta <- flocs_single_sf_meta %>% 
   group_by(sc.deployment.id) %>%
   arrange(fg.modeled.seq.id) %>% 
   mutate(first.last.detection = ifelse(fg.modeled.seq.id == 1, "first_detection",
@@ -127,23 +131,23 @@ mod_single_sf_meta <- mod_single_sf_meta %>%
 rm(am_full_meta_sf)
 
 ## 5b) CONVERT TO LAT/LONG ####
-mod_single_sf_meta_ll  <- st_transform(mod_single_sf_meta, "EPSG:4326")  
+flocs_single_sf_meta_ll  <- st_transform(flocs_single_sf_meta, "EPSG:4326")  
 
 ## 5c) ADD LAT/LONG COORDS AS COLUMNS ####
-mod_single_sf_meta_ll <- mod_single_sf_meta_ll %>%
+flocs_single_sf_meta_ll <- flocs_single_sf_meta_ll %>%
   dplyr::mutate(location.lon = sf::st_coordinates(.)[,1],
                 location.lat = sf::st_coordinates(.)[,2])
 
 ## 5d) REPROJECT ####
-mod_single_sf_meta_ea <- st_transform(mod_single_sf_meta_ll, sc_crs)  
+flocs_single_sf_meta_ea <- st_transform(flocs_single_sf_meta_ll, sc_crs)  
 
 ## 5e) SAVE ####
-saveRDS(mod_single_sf_meta_ea, "./Data/Modeled/15_MODELED_SF_META.rds")
+saveRDS(flocs_single_sf_meta_ea, "./Data/Modeled/15_MODELED_SF_META.rds")
 
 
 # 6) ADJUST FORMATTING FOR ARCPRO ##################################
 ## 6a) SUBSET AND CONVERT TO CAMEL CASE ####
-ap_sf_ll <- mod_single_sf_meta_ll %>%
+ap_sf_ll <- flocs_single_sf_meta_ll %>%
          select(-c(scientific.name, 
                    x.se, y.se,
                    estimated.duty.cycle.days, 
