@@ -66,17 +66,20 @@ dat_lst_sensors_sf_merc180 <- dat_lst_sensors_ll_sf %>%
 rm(dat_lst_am, dat_lst_sensors_ll_sf)
 
 
-# 3) FIT SSM (RUN aniMotum) #######################################################
-## 3a) FIT CONTINUOUS SSM ####
-dat_ssm <- am_lst_sf_merc180 %>% 
-  purrr::map(~aniMotum::fit_ssm(.x, 
-                                spdf = FALSE, #FALSE shuts off speed filter
-                                min.dt = 0, #0 second minimum allowable time between locs (allows for same timestamp to run through)
-                                model = "rw", #crw is a random walk on velocity
-                                pf = FALSE, # DONT PREFILTER (WE HAVE DONE THIS ALREADY) just run SSMs
-                                time.step = NA, # locations estimated at observation times; can adjust to estimate and different intervals (in hours)
-                                fit.to.subset =  FALSE, # DONT fit to prefiltered data (because already prefiltered)
-                                control = ssm_control(verbose = 0)))
+# 3)  FIT SSM (RUN aniMotum): GPS ONLY DATA #################################
+# SSM to account for spatial error is not needed for GPS data if outputting at the original timestep of the tag
+# Running for consistency of output across data types and can adjust if needed for timestep
+## 3a) SDA PREFILTER AND FIT SSM ####
+dat_ssm <- aniMotum::fit_ssm(dat_lst_sensors_sf_merc180$GPS, 
+                                    vmax = 42,  #m/s (SDA max speed from Gronroos radar study)
+                                    ang = c(15,25), # default angles to consider
+                                    distlim = c(50000, 60000), #default is c(2500, 5000); expands distance limits to remove spikes beyond 50-60km (spike patterns were realistic in many cases up to 50km)
+                                    spdf = TRUE, # FALSE shuts off speed filter
+                                    min.dt = 0, # 0 second minimum allowable time between locs (allows for same timestamp to run through)
+                                    model = "rw", # random walk
+                                    time.step = NA, # returns locaitons at observation times
+                                    fit.to.subset =  TRUE, # TRUE runs aniMotum SSM right away after prefiltering 
+                                    control = ssm_control(verbose = 0))
 
 
 # 4) EXPLORE SSM RESULTS ##########################################################
