@@ -77,7 +77,7 @@ rm(dat_lst_am, dat_lst_sensors_ll_sf)
 # SSM to account for spatial error is not needed for GPS data if outputting at the original timestep of the tag
 # Running for consistency of output across data types and can adjust if needed for timestep
 ## 3a) SDA PREFILTER AND FIT SSM ####
-dat_ssm <- aniMotum::fit_ssm(dat_lst_sensors_sf_merc180$GPS, 
+dat_ssm_gps <- aniMotum::fit_ssm(dat_lst_sensors_sf_merc180$GPS, 
                                     vmax = 42,  #m/s (SDA max speed from Gronroos radar study)
                                     ang = c(15,25), # default angles to consider
                                     distlim = c(50000, 60000), #default is c(2500, 5000); expands distance limits to remove spikes beyond 50-60km (spike patterns were realistic in many cases up to 50km)
@@ -88,8 +88,12 @@ dat_ssm <- aniMotum::fit_ssm(dat_lst_sensors_sf_merc180$GPS,
                                     fit.to.subset =  TRUE, # TRUE runs aniMotum SSM right away after prefiltering 
                                     control = ssm_control(verbose = 0))
 
+glimpse(dat_ssm_gps) %>% print(n = Inf) # look at all results
+glimpse(dat_ssm_gps) %>% filter(converged == "FALSE") # check if any failed to converge
+glimpse(dat_ssm_gps) %>% filter(pdHess == "FALSE") # check if TMB solved the Hessian Matrix & Obtained SEs
+
 ## 3c) SAVE SSM RESULTS ####
-saveRDS(dat_ssm_gps, paste0("./Data/Modeled/SSM_gps_.rds"))
+saveRDS(dat_ssm_gps, paste0("./Data/Modeled/15_SSM_gps_.rds"))
 
 ## 3d) EXTRACT SSM FITTED VALUES ####
 # GRAB MODELED DATA AS SPATIAL DATA FRAME:
@@ -113,6 +117,45 @@ flocs_sf_gps_format <- left_join(flocs_sf_gps_format, meta_df) #Joining with `by
 saveRDS(flocs_sf_gps_format, paste0("./Data/Modeled/14_FITTED_SF_gps.rds"))
 
 
+# 4) FIT SSM (RUN aniMotum): ARGOS/GPS DATA #################################
+## 4a) SDA PREFILTER AND FIT SSM ####
+dat_ssm_argosgps <-  aniMotum::fit_ssm(dat_lst_sensors_sf_merc180$`GPS,Argos Doppler Shift`, 
+                                  vmax = 42,  #m/s (SDA max speed from Gronroos radar study)
+                                  ang = c(5,45), # broadened outer angle to account for key problems identified by visual inspection 
+                                  distlim = c(5000, 10000), # default is c(2500, 5000); broadened outer filter for spikes beyond 10 km
+                                  spdf = TRUE, # FALSE shuts off speed filter
+                                  min.dt = 0, # 0 second minimum allowable time between locs (allows for same timestamp to run through)
+                                  model = "rw", # random walk
+                                  time.step = NA, # returns locaitons at observation times
+                                  fit.to.subset =  TRUE, # TRUE runs aniMotum right away after prefiltering 
+                                  control = ssm_control(verbose = 0),
+                                  map = list(psi = factor(NA)))
 
+glimpse(dat_ssm_argosgps) %>% print(n = Inf) # look at all results
+glimpse(dat_ssm_argosgps) %>% filter(converged == "FALSE") # check if any failed to converge
+glimpse(dat_ssm_argosgps) %>% filter(pdHess == "FALSE") # check if TMB solved the Hessian Matrix & Obtained SEs
 
+## 4b) SAVE SSM RESULTS ####
+saveRDS(dat_ssm_argosgps, "./Data/Modeled/14_SSM_argosgps.rds")
+
+## 4c) EXTRACT SSM FITTED VALUES ####
+# GRAB MODELED DAT AS SPATIAL DATA FRAME:
+flocs_sf_argosgps <- grab(dat_ssm_argosgps, what = "fitted", as_sf = TRUE)
+
+## 4d) CREATE SF DATAFRAME OF AM ESTIMATED LOCS ####
+flocs_sf_argosgps_format <- flocs_sf_argosgps %>%
+  rename(sc.deployment.id = id,
+         timestamp = date,
+         longitude.se.km = x.se,
+         latitude.se.km = y.se) %>%
+  arrange(sc.deployment.id, timestamp) %>%
+  group_by(sc.deployment.id) %>%
+  mutate(fg.modeled.seq.id = row_number()) %>%
+  ungroup()
+
+## 4e) JOIN WITH METADATA ####
+flocs_sf_argosgps_format <- left_join(flocs_sf_argosgps_format, meta_df) #Joining with `by = join_by(sc.deployment.id)`
+
+## 4f) SAVE MODELED DATA ####
+saveRDS(flocs_sf_argosgps_format, paste0("./Data/Modeled/14_FITTED_SF_argosgps.rds"))
 
