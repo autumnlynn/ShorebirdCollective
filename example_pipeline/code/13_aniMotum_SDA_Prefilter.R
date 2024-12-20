@@ -1,5 +1,5 @@
 # CODE: 13_aniMotum_SDA_Prefilter.R
-# CODE PURPOSE: RUN SC PRE-FILTERED TRACKING DATA THROUGH aniMotum TO EXPLORE ADDITIONAL FILTERING
+# CODE PURPOSE: RUN SC PRE-FILTERED TRACKING DATA THROUGH aniMotum TO EXPLORE ADDITIONAL FILTERING AND REMOVE TRACKS WITH SHORT DURATION/FEW OBSERVATIONS
 # Note, this prefilter step should be run directly when running the SSM; here we simply output the results of the
 # prefilter so we can view them and explore the points that pass the prefilter easily in comparison to SSM output
 # Before running state-space model, outliers need to be removed; hence this prefilter step
@@ -52,7 +52,7 @@ meta_df <- dat_scpf_keeps_lst %>%
 #   purrr::discard(function(x) nrow(x) == 0) 
 
 
-# 4) FORMAT DATA FOR aniMotum ###################################################
+# 4) FORMAT DATA FOR aniMotum PREFILTERING ###################################################
 ## 4a) FORMAT COLUMNS ####
 dat_lst_am <- dat_scpf_keeps_lst %>% 
   purrr::map(~.x %>%
@@ -140,96 +140,28 @@ dat_prefilter_sda_argos <-  aniMotum::fit_ssm(dat_lst_sensors_sf_merc180$`Argos 
 dat_prefilter_lst_sda <- lst(dat_prefilter_sda_gps, dat_prefilter_sda_argosgps, dat_prefilter_sda_argos)
 
 
-# 6) CONVERT BACK TO LAT AND LONG ########################################
+## 5e) CONVERT BACK TO LAT AND LONG ########################################
 dat_prefilter_lst_sda_ll <- dat_prefilter_lst_sda %>%
   purrr::map(~ .x %>% st_transform("EPSG:4326")) %>% # to match input ll
   purrr::map( ~.x %>% mutate(lon = unlist(purrr::map(.x$geometry,1)), #Add lat/lon as columns
                              lat = unlist(purrr::map(.x$geometry,2))))
 
 
-# 7) GRAB FILTERED LOCATIONS ###################################
+# 6) GRAB FILTERED LOCATIONS ###################################
 ### KEEPS ####
 dat_keeps_sda_lst <- dat_prefilter_lst_sda_ll %>% 
   purrr::map(~.x %>% filter(keep == "TRUE") %>% st_drop_geometry())
 
 
-# 8) FLAG SHORT DURATION TRACKS (AGAIN) ####################################
-# Not suitable for aniMotum
-## 8a) GET TRACK DURATIONS ####
-track_length_df <- dat_keeps_sda_lst %>% purrr::map_dfr(~.x %>%
-                                           group_by(id) %>% # is sc.deployment.id
-                                           arrange(date) %>% # is timestamp
-                                           filter(row_number() == 1 | row_number() == n()) %>% # get first and last obs per individual
-                                           mutate(seq.id = row_number(),
-                                                  first.last.elapsed.mins = round(as.numeric(difftime(date, dplyr::lag(date, default = first(date)), units = "mins")), 0)) %>%
-                                           select(id, seq.id, first.last.elapsed.mins) %>%
-                                           arrange(id, seq.id) %>%
-                                           filter(seq.id == 2), .id = "sc.dataset.id")
-
-## 8b) GRAB IDs FOR TRACK LENGTH LESS THAN OR EQUAL TO 7 DAYS ####
-shortIDs <- track_length_df %>%
-  filter(first.last.elapsed.mins <= 10080) %>% # 7 days in minutes
-  select(id) %>% pull()
-
-## 8c) FLAG SHORT TRACKS WITH FILTER ####
-# Remove these short tracks:
-dat_keeps_sda_lst <- dat_keeps_sda_lst %>%
-  purrr::map(~.x %>%
-        mutate(filter.track.duration.less8days =
-                 case_when(id %in% shortIDs ~ 0, .default = 1)))
-rm(shortIDs, track_length_df)
-
-
-# 9) FLAG LOW NUMBER OF VISIBLE DETECTIONS #####################################################
-## 9a) COUNT # OF VISIBLE DETECTIONS ####
-dep_visible_counts_df <- dat_keeps_sda_lst %>% 
-  purrr::map_dfr(~ .x %>% 
-            group_by(id) %>% 
-            count() %>% 
-            rename(n.visible.detections = n) %>%
-            as.data.frame())
-
-# Also as list for merging:
-dep_visible_counts_lst <- dat_keeps_sda_lst %>% 
-  purrr::map(~ .x %>% 
-                   group_by(id) %>% 
-                   count() %>% 
-                   rename(n.visible.detections = n))
-
-## 9b) WHICH HAVE FEWER THAN 4 DETECTIONS ####
-dep_visible_counts_df %>% filter(n.visible.detections <= 4) 
-
-## 9c) GET IDs OF THOSE FOR FLAGGING ####
-short_count_IDs <- dep_visible_counts_df %>% 
-  filter(n.visible.detections <= 4) %>%
-  select(id) %>%
-  pull()
-
-## 9d) FLAG SHORT COUNTS FOR FILTERING ####
-dat_keeps_sda_lst <- dat_keeps_sda_lst %>%
-  purrr::map(~.x %>% 
-        mutate(filter.visible.obs.less4 = 
-                 case_when(id %in% short_count_IDs ~ 0 , .default = 1)))
-
-## 9e) CREATE NEW ANY FAILED FILTERS COLUMN ####
-dat_keeps_sda_lst <- 
-  dat_keeps_sda_lst %>%
-  purrr::map(~.x %>% mutate(any.failed.sc.filters = if_any(starts_with('filter.'), ~ . == 0)))
-
-## 9f) ADD # VISIBLE DETECTIONS AS COLUMN ####
-dat_keeps_sda_lst <- purrr::map2(dat_keeps_sda_lst, dep_visible_counts_lst,
-                                 ~left_join(.x, .y)) #Joining with `by = join_by(id)`
-
-
-# 10) SAVE KEEPS ########################################################
-## 10a) FILTER OUT SC POST AM REMOVALS ####
+# 7) SAVE KEEPS (SDA FILTERED POINTS FOR EXAMINATION) ########################################################
+## 7a) FILTER OUT POINTS ANIMOTUM SDAs FLAGGED TO REMOVE ####
 dat_keeps_sda_lst_updated <- dat_keeps_sda_lst %>%
   purrr::map(~.x %>% filter(any.failed.sc.filters == "FALSE"))
 
-## 10b) SAVE DATA ####
+## 7b) SAVE DATA ####
 saveRDS(dat_keeps_sda_lst_updated, "./Data/Cleaned/13_event_dat_SDAFILTER_KEEPS.rds")
 
-## 10c) CONVERT TO SF AND SAVE AS GEOPACKAGE LAYER ####
+## 7c) CONVERT TO SF AND SAVE AS GEOPACKAGE LAYER ####
 dat_keeps_sda_sf_updated <- dat_keeps_sda_lst_updated %>%
   map_df(~.x %>% as.data.frame(), .id = "sc.dataset.id") %>%
   rename(sc.deployment.id = id,
@@ -263,13 +195,81 @@ tracks_keeps_sda_sf_ea <- dat_keeps_sda_sf_updated %>%
   summarize(do_union = FALSE) %>%
   st_cast("MULTILINESTRING")
 
-# JOIN METADATA:
+### JOIN METADATA ####
 tracks_keeps_sda_sf_ea <- left_join(tracks_keeps_sda_sf_ea, meta_df)
 
-# CONVERT TO CAMEL CASE FOR ARC:
+### CONVERT TO CAMEL CASE FOR ARC ####
 tracks_keeps_sda_sf_ea <- tracks_keeps_sda_sf_ea %>%
   rename_with(., .fn = ~ snakecase::to_lower_camel_case(.)) 
 
 ### EXPORT TRACKS ####
 st_write(tracks_keeps_sda_sf_ea, "./Data/Cleaned/shp/13_TRACKS_sdafilter_passed.shp", append = FALSE)
 
+
+# 8) FLAG SHORT DURATION TRACKS & TRACKS WITH FEW LOCATIONS AFTER SDA (AGAIN) ####################################
+# These birds will not be suitable for running through SSMs and aniMotum
+# Flag these in the SC PREFILTERED data because we will run the SDA with the SMM in next step
+## 8a) FLAG SHORT TRACK DURATIONS ####
+### GET SDA FILTERED TRACK DURATIONS ####
+track_length_df <- dat_keeps_sda_lst %>% purrr::map_dfr(~.x %>%
+                                           group_by(id) %>% # is sc.deployment.id
+                                           arrange(date) %>% # is timestamp
+                                           filter(row_number() == 1 | row_number() == n()) %>% # get first and last obs per individual
+                                           mutate(seq.id = row_number(),
+                                                  first.last.elapsed.mins = round(as.numeric(difftime(date, dplyr::lag(date, default = first(date)), units = "mins")), 0)) %>%
+                                           select(id, seq.id, first.last.elapsed.mins) %>%
+                                           arrange(id, seq.id) %>%
+                                           filter(seq.id == 2), .id = "sc.dataset.id")
+
+### GRAB IDs FOR TRACK LENGTH LESS THAN OR EQUAL TO 7 DAYS ####
+shortIDs <- track_length_df %>%
+  filter(first.last.elapsed.mins <= 10080) %>% # 7 days in minutes
+  select(id) %>% pull()
+
+### FLAG SHORT TRACKS WITH FILTER IN SC PREFILTERED DATASET ####
+# Remove these short tracks:
+dat_scpf_keeps_lst_updated <- dat_scpf_keeps_lst %>%
+  purrr::map(~.x %>%
+        mutate(filter.track.duration.less8days =
+                 case_when(id %in% shortIDs ~ 0, .default = 1)))
+rm(shortIDs, track_length_df)
+
+## 8b) FLAG LOW NUMBER OF VISIBLE DETECTIONS AFTER SDA ####
+### COUNT # OF VISIBLE DETECTIONS ####
+dep_visible_counts_df <- dat_keeps_sda_lst %>% 
+  purrr::map_dfr(~ .x %>% 
+            group_by(id) %>% 
+            count() %>% 
+            rename(n.visible.detections = n) %>%
+            as.data.frame())
+
+### WHICH HAVE FEWER THAN 4 DETECTIONS ####
+dep_visible_counts_df %>% filter(n.visible.detections <= 4) 
+
+### GET IDs OF THOSE FOR FLAGGING ####
+short_count_IDs <- dep_visible_counts_df %>% 
+  filter(n.visible.detections <= 4) %>%
+  select(id) %>%
+  pull()
+
+### FLAG SHORT COUNTS FOR FILTERING (IN SC PREFILTERED DATASET) ####
+dat_scpf_keeps_lst_updated <- 
+  dat_scpf_keeps_lst_updated %>%
+  purrr::map(~.x %>% mutate(any.failed.sc.filters = 
+                              if_any(starts_with('filter.'), ~ . == 0)) %>%
+               mutate(any.failed.sc.filters = case_when(is.na(any.failed.sc.filters) ~ "FALSE", 
+                                                        .default = "TRUE")))
+
+### CREATE NEW ANY FAILED FILTERS COLUMN ####
+dat_keeps_sda_lst <- 
+  dat_keeps_sda_lst %>%
+  purrr::map(~.x %>% mutate(any.failed.sc.filters = if_any(starts_with('filter.'), ~ . == 0)))
+
+
+# 9) SAVE SC PREFILTERED DATA FOR INDIVIDUALS WITH ENOUGH TRACKING DATA TO MOVE THROUGH SSMs CONSIDERING SDA PREFILTERING #############################
+## 9a) FILTER OUT AM PREFILTER REMOVALS ####
+dat_scpf_keeps_lst_updated <- dat_scpf_keeps_lst_updated %>%
+  purrr::map(~.x %>% filter(any.failed.sc.filters == "FALSE"))
+
+## 9b) SAVE DATA ###
+saveRDS(dat_scpf_keeps_lst_updated, paste0("./Data/Cleaned/14_event_dat_SDAFILTER_INDS_",data_version,".rds"))
