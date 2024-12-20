@@ -93,7 +93,7 @@ glimpse(dat_ssm_gps) %>% filter(converged == "FALSE") # check if any failed to c
 glimpse(dat_ssm_gps) %>% filter(pdHess == "FALSE") # check if TMB solved the Hessian Matrix & Obtained SEs
 
 ## 3c) SAVE SSM RESULTS ####
-saveRDS(dat_ssm_gps, paste0("./Data/Modeled/15_SSM_gps_.rds"))
+saveRDS(dat_ssm_gps, "./Data/Modeled/15_SSM_gps_.rds")
 
 ## 3d) EXTRACT SSM FITTED VALUES ####
 # GRAB MODELED DATA AS SPATIAL DATA FRAME:
@@ -114,7 +114,7 @@ flocs_sf_gps_format <- flocs_sf_gps %>%
 flocs_sf_gps_format <- left_join(flocs_sf_gps_format, meta_df) #Joining with `by = join_by(sc.deployment.id)`
 
 ## 3g) SAVE MODELED DATA ####
-saveRDS(flocs_sf_gps_format, paste0("./Data/Modeled/14_FITTED_SF_gps.rds"))
+saveRDS(flocs_sf_gps_format, "./Data/Modeled/14_FITTED_SF_gps.rds")
 
 
 # 4) FIT SSM (RUN aniMotum): ARGOS/GPS DATA #################################
