@@ -18,14 +18,15 @@ library(sf)
 
 
 # 2) LOAD DATA ############################################
-## 2a) DATA PASSING PREFILTERS ####
+## 2a) DATA PASSING SC PREFILTERS WITH SHORT TRACK DURATION/FEW DETECTIONS AFTER SDA REMOVED ####
+# Deployments with short track duration and few detections removed in previous script
 # And formatted for ANIMOTUM:
-dat_keeps_lst_updated <- readRDS("./Data/Cleaned/13_event_dat_SDAFILTER.rds")
+dat_scpf_keeps_lst_updated <- readRDS("./Data/Cleaned/13_event_dat_SDAFILTER_INDS.rds")
 # In previous step, might be possible to export as sf, so wouldn't need to reformat below
 
 ## 2b) FORMAT FOR ANIMOTUM ####
 # Drop extra columns:
-am_lst <- dat_keeps_lst_updated %>% 
+am_lst <- dat_scpf_keeps_lst_updated %>% 
   purrr::map( ~.x %>% 
          as.data.frame() %>% 
                    mutate(lc = as.factor(lc), id = as.character(id)) %>%
