@@ -1,7 +1,10 @@
 # CODE: 13_aniMotum_SDA_Prefilter.R
 # CODE PURPOSE: RUN SC PRE-FILTERED TRACKING DATA THROUGH aniMotum TO EXPLORE ADDITIONAL FILTERING AND REMOVE TRACKS WITH SHORT DURATION/FEW OBSERVATIONS
-# Note, this prefilter step should be run directly when running the SSM; here we simply output the results of the
+# Note, this prefilter step should be run directly when running the SSM; here we simply output the results of the...
 # prefilter so we can view them and explore the points that pass the prefilter easily in comparison to SSM output
+# This script also identifies tag deployments where track durations and number of detections are low after the SDA in aniMotum...
+# and removes these tag deployments from the dataset that will be run through aniMotum SSM.
+# ABOUT PREFILTERING:
 # Before running state-space model, outliers need to be removed; hence this prefilter step
 # Note that GPS data is more messy than many think and really should be run through a speed or sda filter (as done here)
 # This uses a separate SDA prefilter for each data type (Argos only, GPS only, or Argos and GPS)
