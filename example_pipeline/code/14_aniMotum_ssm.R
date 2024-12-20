@@ -2,6 +2,8 @@
 # CODE PURPOSE: RUN SC PRE-FILTERED TRACKING DATA THROUGH ANIMOTUM TO ESTIMATE MOST PROBABLE LOCATION AND SPATIAL ERROR
 # This script only runs tag deployments with sufficient durations and detection sample sizes 
 # after considering the aniMotum speed-distance-angle prefilter step
+# Note: birds tracked with GPS only, Argos only, and both Argos and GPS are run through aniMotum separately 
+# because they require different prefiltering approaches
 # Example can be found here: https://cran.r-project.org/web/packages/foieGras/vignettes/basics.html
 
 
@@ -17,36 +19,51 @@ library(conflicted)
 conflict_prefer("filter", "dplyr")
 library(cowplot)
 library(sf)
+source("./Code/Functions/named_group_split.r")
 
 
 # 2) LOAD DATA ############################################
 ## 2a) DATA PASSING SC PREFILTERS WITH SHORT TRACK DURATION/FEW DETECTIONS AFTER SDA REMOVED ####
-# Deployments with short track duration and few detections removed in previous script
-# And formatted for ANIMOTUM:
 dat_scpf_keeps_lst_updated <- readRDS("./Data/Cleaned/13_event_dat_SDAFILTER_INDS.rds")
 # In previous step, might be possible to export as sf, so wouldn't need to reformat below
 
 ## 2b) FORMAT FOR ANIMOTUM ####
-# Drop extra columns:
-am_lst <- dat_scpf_keeps_lst_updated %>% 
-  purrr::map( ~.x %>% 
-         as.data.frame() %>% 
-                   mutate(lc = as.factor(lc), id = as.character(id)) %>%
-         select(id, date, lc, lon, lat, smaj, smin, eor)) # will not run if data in the wrong order 
+dat_lst_am <- dat_scpf_keeps_lst_updated %>% 
+  purrr::map(~.x %>%
+               select(sc.deployment.id, timestamp, argos.lc, location.long, location.lat, 
+                      argos.semi.major, argos.semi.minor, argos.orientation, sensor.types.detected) %>% 
+               rename(id = sc.deployment.id, 
+                      date = timestamp, 
+                      lc = argos.lc, 
+                      lon = location.long, 
+                      lat = location.lat, 
+                      smaj = argos.semi.major, 
+                      smin = argos.semi.minor, 
+                      eor = argos.orientation) %>% # rename to match argos format
+               mutate(lc = as.factor(lc), id = as.character(id)) %>% #Id has to be a character to run through aniMotum
+               droplevels() %>% 
+               as.data.frame())
 
-## 2c) CONVERT TO SF AND SPECIFY LAT/LONG ####
+## 2c) SPLIT BY DATA TYPE ####
+dat_lst_sensors <- dat_lst_am %>%
+  purrr::map_dfr(~.x %>% as.data.frame()) %>%
+  named_group_split(., sensor.types.detected) %>%
+  purrr::map(~.x %>% select(-sensor.types.detected))
+rm(dat_lst_am, dat_scpf_keeps_lst_updated)
+
+## 2d) CONVERT TO SF AND SPECIFY LAT/LONG ####
 # Otherwise AM will guess the CRS for each project
-am_lst_sf_ll <- am_lst %>%
+dat_lst_sensors_ll_sf <- dat_lst_sensors %>%
   purrr::map(~sf::st_as_sf(.x, coords=c("lon","lat"), crs="+proj=longlat +datum=WGS84"))
 
 ## 2d) SPECIFY AM MERCATOR PROJECTION ####
 # And convert to global mercator with the meridian at 180 again (to match animotum example)
 # Meridian 180 helpful to ensure dateline is correct
-am_lst_sf_merc180 <- am_lst_sf_ll %>%
+dat_lst_sensors_sf_merc180 <- dat_lst_sensors_ll_sf %>%
   purrr::map(~.x %>%
         st_transform("+proj=merc +lon_0=180 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=km +no_defs"))
 # Meridian 180 needed to ensure dateline is correct (may not be required in this version of aniMotum but keeping for consistency)
-rm(am_lst, am_lst_sf_ll)
+rm(dat_lst_am, dat_lst_sensors_ll_sf)
 
 
 # 3) FIT SSM (RUN aniMotum) #######################################################
