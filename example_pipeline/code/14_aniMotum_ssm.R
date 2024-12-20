@@ -157,5 +157,46 @@ flocs_sf_argosgps_format <- flocs_sf_argosgps %>%
 flocs_sf_argosgps_format <- left_join(flocs_sf_argosgps_format, meta_df) #Joining with `by = join_by(sc.deployment.id)`
 
 ## 4f) SAVE MODELED DATA ####
-saveRDS(flocs_sf_argosgps_format, paste0("./Data/Modeled/14_FITTED_SF_argosgps.rds"))
+saveRDS(flocs_sf_argosgps_format, "./Data/Modeled/14_FITTED_SF_argosgps.rds")
 
+
+# 5) FIT SSM (RUN aniMotum): ARGOS DATA #################################
+## 5a) PREFILTER AND FIT SSM ####
+dat_ssm_argos <-  aniMotum::fit_ssm(dat_lst_sensors_sf_merc180$`Argos Doppler Shift`, 
+                                       vmax = 42,  #m/s (SDA max speed from Gronroos radar study)
+                                       ang = c(15,45),  # broadened outer angle angle further to account for key problems identified by visual inspection
+                                       distlim = c(2500, 10000), #default is c(2500, 5000); broadened outer filter for spikes beyond 10 km
+                                       spdf = TRUE, # FALSE shuts off speed filter
+                                       min.dt = 0, # 0 second minimum allowable time between locs (allows for same timestamp to run through)
+                                       model = "rw", # random walk
+                                       time.step = NA, # returns locaitons at observation times
+                                       fit.to.subset =  TRUE, # TRUE runs aniMotum right away after prefiltering 
+                                       control = ssm_control(verbose = 0),
+                                       map = list(psi = factor(NA)))
+glimpse(dat_ssm_argos) %>% print(n = Inf) # look at all results
+glimpse(dat_ssm_argos) %>% filter(converged == "FALSE") # check if any failed to converge
+glimpse(dat_ssm_argos) %>% filter(pdHess == "FALSE") # check if TMB solved the Hessian Matrix & Obtained SEs
+
+## 5b) SAVE SSM RESULTS ####
+saveRDS(dat_ssm_argos, "./Data/Modeled/14_SSM_argos_.rds")
+
+## 5c) EXTRACT SSM FITTED VALUES ####
+# GRAB MODELED DAT AS SPATIAL DATA FRAME:
+flocs_sf_argos <- grab(dat_ssm_argos, what = "fitted", as_sf = TRUE)
+
+## 5d) CREATE SF DATAFRAME OF AM ESTIMATED LOCS ####
+flocs_sf_argos_format <- flocs_sf_argos %>%
+  rename(sc.deployment.id = id,
+         timestamp = date,
+         longitude.se.km = x.se,
+         latitude.se.km = y.se) %>%
+  arrange(sc.deployment.id, timestamp) %>%
+  group_by(sc.deployment.id) %>%
+  mutate(fg.modeled.seq.id = row_number()) %>%
+  ungroup()
+
+## 5e) JOIN WITH METADATA ####
+flocs_sf_argos_format <- left_join(flocs_sf_argos_format, meta_df) #Joining with `by = join_by(sc.deployment.id)`
+
+## 5f) SAVE MODELED DATA ####
+saveRDS(flocs_sf_argos_format, "./Data/Modeled/14_FITTED_SF_argos.rds")
