@@ -1,5 +1,7 @@
 # CODE: 14_aniMotum_ssm.R
 # CODE PURPOSE: RUN SC PRE-FILTERED TRACKING DATA THROUGH ANIMOTUM TO ESTIMATE MOST PROBABLE LOCATION AND SPATIAL ERROR
+# This script only runs tag deployments with sufficient durations and detection sample sizes 
+# after considering the aniMotum speed-distance-angle prefilter step
 # Example can be found here: https://cran.r-project.org/web/packages/foieGras/vignettes/basics.html
 
 
