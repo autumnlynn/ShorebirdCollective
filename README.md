@@ -4,7 +4,7 @@ Welcome to GitHub repository of the [Shorebird Science and Conservation Collecti
 
 ### Learn more about the Shorebird Collective from:
 1) The initiative's website: https://nationalzoo.si.edu/migratory-birds/shorebird-collective
-2) This pre-print: https://www.biorxiv.org/content/10.1101/2024.01.30.576574v1
+2) A scientific paper describing how we work and contributed to conservation in the first two years of the project: https://doi.org/10.1111/cobi.70194
 
 ### Contributors
 **Principal Investigator,** Autumn-Lynn Harrison, HarrisonAL@si.edu
