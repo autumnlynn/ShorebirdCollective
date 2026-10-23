@@ -1,4 +1,4 @@
-# CODE: 02_Movebank_ArgosGPS_Download.R
+# CODE: 01_Movebank_ArgosGPS_Download.R
 # CODE PURPOSE: DOWNLOAD ARGOS, GPS, & ARGOS/GPS DATA (EVENTS & REFERENCE DAT) ####
 # Movebank data library for more info: http://vocab.nerc.ac.uk/collection/MVB/current/ (as of 2026-01-24)
 # Note: if a column in the reference data isn't listed, this may be a custom column added by data owner
