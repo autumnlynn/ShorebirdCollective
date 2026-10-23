@@ -71,8 +71,8 @@ sc_deps_df <- read.csv(paste0(data_filepath, "./movebank_sc_deployment_ts_",data
 ref_dat_list <- readRDS(paste0("./Data/rds/01_movebank_download_refdat_lst_",data_version,".rds"))
 
 ## 2f) LOAD SHOREBIRD COLLECTIVE DATASET METADATA ####
-# To merge sc_dataset_id and species_code identifiers
-datasets_argosgps_meta_df <- read.csv(paste0("./Data/metadata_exports/01_datasets_argosgps_meta_df_", data_version,".csv"),
+# File internal to Shorebird Collective with dataset metadata to merge sc_dataset_id and species_code identifiers
+datasets_argosgps_meta_df <- read.csv(paste0("./Data/metadata_exports/datasets_argosgps_meta_df_", data_version,".csv"),
 fileEncoding = "latin1")
 
 
