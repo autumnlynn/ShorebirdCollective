@@ -5,8 +5,7 @@
 # ... to us from repositories other than Movebank.
 # ... We formatted these datasets to match those downloaded from Movebank (data dictionary as of 2026-01-24)
 # ... and we added columns sc_dataset_id, sc_individual_id, sc_deployment_id, sc_tracking_data_type 
-# We then processed these data in the same way as the Movebank data in 03_Movebank_Format_Reference_Data.R and 
-# ... in 04_Movebank_Format_Reference_Data.r
+# We then processed these data in the same way as the Movebank data in 02_Movebank_Format_Event_Data.R 
 
 # 00) SETUP ####
 data_version <- "2026-01-24"
