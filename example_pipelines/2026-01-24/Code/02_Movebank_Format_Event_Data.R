@@ -393,7 +393,7 @@ dat_list_sub <- dat_list_sub %>%
 dat_list_sub %>% map(~.x %>% group_by(any_failed_sc_filters) %>% count()) 
 
 ## 8d) SAVE ####
-saveRDS(dat_list_sub, paste0("./Data/rds/03_dat_list_flagged_", data_version))
+saveRDS(dat_list_sub, paste0("./Data/rds/02_dat_list_flagged_", data_version))
 
 
 # 9) ESTIMATE TAG SAMPLE INTERVALS ###########################################################
@@ -440,7 +440,7 @@ purrr::map2(duty_cycle_df_list, names(duty_cycle_df_list),
             ~write.csv(.x, paste0(data_filepath, .y ,"/Sampling_Interval/", .y, "_est_duty_cycle_dat.csv")))
 
 ### RDS to add to refdata later:
-saveRDS(duty_cycle_df_list, paste0("./Data/rds/03_est_dutycycle_lst_",data_version,".rds"))
+saveRDS(duty_cycle_df_list, paste0("./Data/rds/02_est_dutycycle_lst_",data_version,".rds"))
 
 
 # 10) PREPARE DATASETS FOR MERGE ############################################################
@@ -461,7 +461,7 @@ dat_merge_datasets_df %>% glimpse()
 dat_merge_scids_df <- add_sc_ids(dat_merge_datasets_df)
 
 ## 10d) SAVE EVENT DATA FOR MERGING ####
-saveRDS(dat_merge_scids_df, paste0("./Data/rds/03_movebank_event_to_merge_",data_version,".rds"))
+saveRDS(dat_merge_scids_df, paste0("./Data/rds/02_movebank_event_to_merge_",data_version,".rds"))
 
 rm(dat_merge_datasets_df, dat_merge_df)
 
@@ -471,5 +471,5 @@ sc_ids_df <- dat_merge_scids_df %>%
            species_code, sc_dataset_id, sc_individual_id, sc_deployment_id)
 
 ### AND AS CSV FOR RECORDS:
-write.csv(sc_ids_df, "./Data/metadata_exports/03_movebank_scids_to_map.csv")
+write.csv(sc_ids_df, "./Data/metadata_exports/02_movebank_scids_to_map.csv")
 
