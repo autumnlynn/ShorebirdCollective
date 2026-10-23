@@ -151,7 +151,7 @@ purrr::map2(dat_list, names(dat_list),
             ~write.csv(.x, paste0(data_filepath,"/", .y , "/", .y, "_event_dat.csv")))
 
 ### SAVE RDS ####
-saveRDS(dat_list, paste0("./Data/rds/02_movebank_download_eventdat_lst_",data_version,".rds"))
+saveRDS(dat_list, paste0("./Data/rds/01_movebank_download_eventdat_lst_",data_version,".rds"))
 
 
 # 6) DOWNLOAD REFERENCE/DEPLOYMENT DATA #######################################################
@@ -187,7 +187,7 @@ ref_dat_df <- plyr::rbind.fill(ref_dat_list) %>% # will fill/assign all of the s
 ref_dat_list <- split(ref_dat_df, ref_dat_df$study_id)
 
 ### SAVE RDS ####
-saveRDS(ref_dat_list, paste0("./Data/rds/02_movebank_download_refdat_lst_",data_version,".rds"))
+saveRDS(ref_dat_list, paste0("./Data/rds/01_movebank_download_refdat_lst_",data_version,".rds"))
 
 
 # 7) DOWNLOAD STUDY DATA #################################################
@@ -216,7 +216,7 @@ purrr::map2(study_dat_list, names(study_dat_list),
             ~write.csv(.x, paste0(data_filepath,"/", .y , "/", .y, "_study_dat_", data_version,".csv")))
 
 ### SAVE RDS ####
-saveRDS(study_dat_list, paste0("./Data/rds/02_movebank_download_studydat_lst_",data_version,".rds"))
+saveRDS(study_dat_list, paste0("./Data/rds/01_movebank_download_studydat_lst_",data_version,".rds"))
 
 
 # 8) SUMMARIZE EVENT DATA ###############################################################
@@ -270,4 +270,4 @@ purrr::map2(event_sum_list, names(event_sum_list),
             ~write.csv(.x, paste0(data_filepath,"/", .y , "/", .y, "_event_summary_dat_", data_version,".csv")))
 
 ### SAVE RDS ####
-saveRDS(event_sum_list, paste0("./Data/rds/02_movebank_download_event_summary_lst_",data_version,".rds"))
+saveRDS(event_sum_list, paste0("./Data/rds/01_movebank_download_event_summary_lst_",data_version,".rds"))
