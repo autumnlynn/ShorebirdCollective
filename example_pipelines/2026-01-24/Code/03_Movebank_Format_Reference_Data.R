@@ -24,11 +24,11 @@ source("./Code/Functions/add_sc_dataset_ids.r")
 
 # 2) LOAD DATA #####################################################
 ## 2a) REFERENCE DATA ####
-ref_dat_list <- readRDS(paste0("./Data/rds/02_movebank_download_refdat_lst_",data_version,".rds"))
+ref_dat_list <- readRDS(paste0("./Data/rds/01_movebank_download_refdat_lst_",data_version,".rds"))
 
 ## 2b) EVENT DATA SUMMARY ####
 # Has sc_tracking_data_type column added to it
-event_sum_list <- readRDS(paste0("./Data/rds/02_movebank_download_event_summary_lst_",data_version,".rds"))
+event_sum_list <- readRDS(paste0("./Data/rds/01_movebank_download_event_summary_lst_",data_version,".rds"))
 
 ## 2c) SC DEPLOYMENT START/END TIMES ####
 sc_deps_df <- read.csv(paste0(data_filepath, "./movebank_sc_deployment_ts_",data_version,".csv"),
