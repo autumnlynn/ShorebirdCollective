@@ -51,11 +51,11 @@ source("./Code/Functions/add_sc_ids.r")
 
 # 2) LOAD DATA #####################################################
 ## 2a) EVENT DATA ####
-dat_list <- readRDS(paste0("./Data/rds/02_movebank_download_eventdat_lst_",data_version,".rds"))
+dat_list <- readRDS(paste0("./Data/rds/01_movebank_download_eventdat_lst_",data_version,".rds"))
 
 ## 2b) EVENT DATA SUMMARY ####
 # Has sc_tracking_data_type added to it
-event_sum_list <- readRDS(paste0("./Data/rds/02_movebank_download_event_summary_lst_",data_version,".rds"))
+event_sum_list <- readRDS(paste0("./Data/rds/01_movebank_download_event_summary_lst_",data_version,".rds"))
 
 ## 2c) LOAD SC MANUALLY MARKED OUTLIER LIST ####
 # A list of event_id from Movebank identified as outliers by Shorebird Collective that were problems 
@@ -68,7 +68,7 @@ sc_deps_df <- read.csv(paste0(data_filepath, "./movebank_sc_deployment_ts_",data
                        na.strings = c("", " "))
 
 ## 2e) LOAD REFERENCE DATA ####
-ref_dat_list <- readRDS(paste0("./Data/rds/02_movebank_download_refdat_lst_",data_version,".rds"))
+ref_dat_list <- readRDS(paste0("./Data/rds/01_movebank_download_refdat_lst_",data_version,".rds"))
 
 ## 2f) LOAD SHOREBIRD COLLECTIVE DATASET METADATA ####
 # To merge sc_dataset_id and species_code identifiers
