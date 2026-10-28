@@ -11,4 +11,4 @@ Welcome to GitHub repository of the [Shorebird Science and Conservation Collecti
 
 **Quantitative Ecologist,** Allie Anderson, AndersonA@si.edu (primarily responsible for code pipelines)
 
-**Conservation Specialist,** Candace Stenzel, StenzelC@si.edu (primarily responsible for form templates)
+**Conservation Specialist,** Candace Stenzel (former staff member, primarily responsible for form templates)
