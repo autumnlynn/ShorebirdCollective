@@ -1,8 +1,8 @@
 # CODE: 06_02_Animotum_Segment_and_SDA_Prefilter_Daily.R
 # CODE PURPOSE: SEGMENT DATA AFTER LARGE GAPS AND PREFILTER SEGMENTED DATA WITH SDA FILTER 
-# This code is an alternative to 06_02_Animotum_SDA_Prefilter.R
-# 06_02 estimates prefilters the data in aniMotum estimating locations at the original timestep of the daily --
-# ... this script segments the data after large gaps and then runs SDA prefilters in aniMotum
+# This code is an alternative to 06_01_Animotum_SDA_Prefilter.R
+# 06_02 prefilters the data in aniMotum after segmenting the data after large data gaps and then runs SDA prefilters in aniMotum
+# Segmenting is necessary prior to predicting data to daily locations because the model will continue on and on to predict during large gaps
 #
 # This code splits tracks into separate segments (following gaps > 15 days) for estimating daily locations
 ## 15 days was chosen to try to reduce the number of segments per track 
