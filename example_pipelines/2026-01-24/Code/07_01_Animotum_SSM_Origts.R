@@ -151,7 +151,7 @@ plocs_sf_gps_format <- left_join(plocs_sf_gps_format, metadata_to_add) #Joining 
 
 ## 4g) SAVE MODELED DATA ####
 saveRDS(plocs_sf_gps_format, paste0("./Data/rds/Modeled/07_PREDICTED_Origts_SF_gps_",data_version,".rds"))
-rm(plocs_sf_gps_format, dat_ssm_gps, plocs_sf_gps, se_issues_gps)
+rm(plocs_sf_gps_format, dat_ssm_gps, plocs_sf_gps)
 gc()
 
 
@@ -204,7 +204,7 @@ plocs_sf_argosgps_format <- left_join(plocs_sf_argosgps_format, metadata_to_add)
 
 ## 5g) SAVE MODELED DATA ####
 saveRDS(plocs_sf_argosgps_format, paste0("./Data/rds/Modeled/07_PREDICTED_Origts_SF_argosgps_",data_version,".rds"))
-rm(plocs_sf_argosgps_format, dat_ssm_argosgps, plocs_sf_argosgps, argosgps_timesteps, se_issues_argosgps)
+rm(plocs_sf_argosgps_format, dat_ssm_argosgps, plocs_sf_argosgps, argosgps_timesteps)
 gc()
 
 
@@ -257,6 +257,6 @@ plocs_sf_argos_format <- left_join(plocs_sf_argos_format, metadata_to_add) #Join
 
 ## 6h) SAVE MODELED DATA ##################################################
 saveRDS(plocs_sf_argos_format, paste0("./Data/rds/Modeled/07_PREDICTED_Origts_SF_argos_",data_version,".rds"))
-rm(plocs_sf_argos_format, dat_ssm_argos, plocs_sf_argos, argos_timesteps, se_issues_argos)
+rm(plocs_sf_argos_format, dat_ssm_argos, plocs_sf_argos, argos_timesteps)
 gc()
 
