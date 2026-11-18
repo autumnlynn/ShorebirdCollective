@@ -192,8 +192,8 @@ plocs_sf_argosgps <- grab(dat_ssm_argosgps, what = "predicted", as_sf = TRUE)
 plocs_sf_argosgps_format <- plocs_sf_argosgps %>%
   rename(sc_deployment_id = id,
          timestamp = date,
-         longitude_se_km = x.se,
-         latitude_se_km = y.se) %>%
+         x_se_km = x.se,
+         y_se_km = y.se) %>%
   arrange(sc_deployment_id, timestamp) %>%
   group_by(sc_deployment_id) %>%
   mutate(am_modeled_seq_id = row_number()) %>%
@@ -245,8 +245,8 @@ plocs_sf_argos <- grab(dat_ssm_argos, what = "predicted", as_sf = TRUE)
 plocs_sf_argos_format <- plocs_sf_argos %>%
   rename(sc_deployment_id = id,
          timestamp = date,
-         longitude_se_km = x.se,
-         latitude_se_km = y.se) %>%
+         x_se_km = x.se,
+         y_se_km = y.se) %>%
   arrange(sc_deployment_id, timestamp) %>%
   group_by(sc_deployment_id) %>%
   mutate(am_modeled_seq_id = row_number()) %>%
