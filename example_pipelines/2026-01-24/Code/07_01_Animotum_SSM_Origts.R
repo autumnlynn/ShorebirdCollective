@@ -1,5 +1,6 @@
 # CODE: 07_01_AniMotum_SSM_Origts.R
 # This code is to be used after 06_01_AniMotum_SDA_Prefilter.r
+#
 # CODE PURPOSE: RUN SC PRE-FILTERED TRACKING DATA THROUGH ANIMOTUM TO ESTIMATE SPATIAL ERROR and ...
 # PREDICT LOCATIONS AT ORIGINAL TIME INTERVAL RECORDED BY THE TAG WHILE ACCOUNTING FOR SPATIAL ERROR
 # Note: this runs tag deployments through aniMotum with > 7 days tracking and at least 5 locations after SDA prefiltering
