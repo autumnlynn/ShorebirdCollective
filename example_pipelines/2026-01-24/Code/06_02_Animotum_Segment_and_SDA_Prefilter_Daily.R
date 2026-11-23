@@ -7,7 +7,7 @@
 # This code splits tracks into separate segments (following gaps > 15 days) for estimating daily locations
 ## 15 days was chosen to try to reduce the number of segments per track 
 ## In this dataset some tags recorded locations weekly, so a two week gap could arise if a location was missed
-## In the future, its more suitable that those datasets are run through the SSM with an interval of 7 days
+## In the future, its more suitable that those datasets are run through the SSM with a time prediction interval of 7 days
 # And prefilters data with speed, distance, angle filters for the different tracking data types (argos only, gps only, or both argosgps)
 
 # 00) SETUP ####
@@ -217,4 +217,5 @@ dat_lst_sensors_sf_merc180_checked <- segchecks_lst$cleaned_data
 
 ## 7c) SAVE SEGMENTS READY FOR ANIMOTUM SSM ####
 saveRDS(dat_lst_sensors_sf_merc180_checked, paste0("./Data/rds/06_animotum_daily_input_segdat_",data_version,".rds"))
+
 
